@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тайны Старой Аптеки — Алхимический Тур</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap');
+
+        :root {
+            --alchemist-gold: #d4af37;
+            --deep-blood: #4a0404;
+            --mystic-amber: #ffbf00;
+            --aged-parchment: #f4eee1;
+            --wood-dark: #2c1810;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--wood-dark);
+            background-image: radial-gradient(circle at center, #3d2217 0%, #1a0f0a 100%);
+            color: var(--aged-parchment);
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        h1, h2, h3, .serif { 
+            font-family: 'Playfair Display', serif; 
+            letter-spacing: -0.02em;
+        }
+
+        /* МАГИЧЕСКИЕ ДВЕРИ */
+        .door-container { 
+            perspective: 1200px; 
+            cursor: pointer;
+        }
+        
+        .door {
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            position: relative;
+            background: linear-gradient(135deg, #5c0a0a 0%, #300202 100%);
+            border: 3px solid var(--alchemist-gold);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), inset 0 0 30px rgba(212, 175, 55, 0.2);
+        }
+
+        .door::after {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: inherit;
+            pointer-events: none;
+        }
+
+        .door-container:hover .door { 
+            transform: rotateY(-25deg) scale(1.02); 
+            box-shadow: 15px 20px 60px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.4);
+            border-color: var(--mystic-amber);
+        }
+
+        .door-icon-glow {
+            text-shadow: 0 0 15px rgba(255, 191, 0, 0.6);
+            transition: all 0.5s ease;
+        }
+
+        .door-container:hover .door-icon-glow {
+            transform: translateZ(30px);
+            color: var(--mystic-amber);
+        }
+
+        /* КАРТОЧКИ */
+        .card-stack {
+            position: relative;
+            width: 100%;
+            height: 520px;
+        }
+
+        .story-card {
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: #fffdfa; 
+            border-radius: 12px; 
+            padding: 1.5rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4); 
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; 
+            flex-direction: column; 
+            border: 1px solid #d4c4a8;
+            opacity: 0; 
+            transform: scale(0.9) translateY(20px); 
+            pointer-events: none;
+            color: #2c1810;
+        }
+
+        .story-card.active { 
+            opacity: 1; 
+            transform: scale(1) translateY(0); 
+            z-index: 20; 
+            pointer-events: auto; 
+        }
+
+        .story-card.prev { 
+            opacity: 0; 
+            transform: translateX(-110%) rotate(-8deg); 
+        }
+
+        .btn-mystic { 
+            background: linear-gradient(to bottom, #d4af37, #b8860b);
+            color: #2c1810; 
+            font-weight: 800;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease; 
+        }
+        .btn-mystic:hover { 
+            background: linear-gradient(to bottom, #ffdf00, #d4af37);
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .cinema-screen {
+            background: #000;
+            border: 15px solid #1a0f0a;
+            border-image: linear-gradient(to bottom, #3d2217, #1a0f0a) 1;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+        }
+
+        .hidden-page { display: none; opacity: 0; }
+        .page-transition { transition: opacity 0.6s ease; }
+
+        @keyframes bubble-rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-140px) scale(0.3); opacity: 0; }
+        }
+        .bubble {
+            position: absolute; background: rgba(255, 255, 255, 0.2); 
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 50%; animation: bubble-rise 2.5s infinite ease-out;
+        }
+
+        .gold-text {
+            background: linear-gradient(to bottom, #f9e8ad 0%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .scroll-custom::-webkit-scrollbar { width: 5px; }
+        .scroll-custom::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
+
+        /* Галерея-кнопка */
+        .gallery-button {
+            border: 2px solid var(--alchemist-gold);
+            background: rgba(44, 24, 16, 0.6);
+            backdrop-filter: blur(5px);
+            transition: all 0.4s ease;
+        }
+        .gallery-button:hover {
+            background: var(--alchemist-gold);
+            color: var(--wood-dark);
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Навигация -->
+    <nav class="p-5 flex justify-between items-center border-b border-yellow-900/30 bg-[#1a0f0a]/80 backdrop-blur-xl sticky top-0 z-50">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('lobby')">
+            <div class="w-10 h-10 bg-red-950 rounded-lg flex items-center justify-center border border-yellow-600 shadow-inner">
+                <i class="fa-solid fa-mortar-pestle text-yellow-500 text-xl"></i>
+            </div>
+            <span class="serif text-2xl font-bold gold-text">Аптека Пеля</span>
+        </div>
+        <div id="nav-info" class="hidden md:block text-yellow-600/60 italic text-sm font-medium tracking-widest uppercase">Secretum Secretorum</div>
+        <button onclick="showView('lobby')" class="bg-red-950/50 border border-yellow-900/50 hover:bg-red-900/50 px-5 py-2 rounded-lg text-yellow-500 font-bold text-[11px] uppercase tracking-widest transition-all">
+            <i class="fa-solid fa-compass mr-2"></i> Вернуться
+        </button>
+    </nav>
+
+    <!-- ГЛАВНЫЙ ХОЛЛ -->
+    <section id="view-lobby" class="page-transition max-w-7xl mx-auto px-4 py-16 text-center w-full">
+        <div class="mb-12">
+            <span class="text-yellow-500/50 uppercase tracking-[0.5em] text-xs mb-4 block">Magnum Opus 2025</span>
+            <h1 class="text-6xl md:text-8xl font-bold mb-6 gold-text">Тайны Старой Аптеки</h1>
+            <p class="text-stone-400 mb-4 max-w-2xl mx-auto text-lg italic">«Шагните в мир, где наука переплетается с магией Петербурга»</p>
+            <div class="w-24 h-1 bg-yellow-600/30 mx-auto"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 px-6 mb-16">
+            <div class="door-container" onclick="showView('room1')">
+                <div class="door aspect-[2/3.2] rounded-t-[4rem] flex flex-col items-center justify-center p-8 text-center">
+                    <div class="absolute top-8 w-12 h-12 border-2 border-yellow-600/30 rounded-full flex items-center justify-center opacity-40">I</div>
+                    <i class="fa-solid fa-film text-6xl mb-8 text-yellow-500 door-icon-glow"></i>
+                    <h3 class="serif text-3xl mb-3 text-white">Зал №1</h3>
+                    <p class="text-[11px] text-yellow-600/80 mb-10 uppercase tracking-[0.2em] font-bold">Хроника фармации</p>
+                    <div class="px-10 py-3 bg-yellow-600/10 border border-yellow-500/40 rounded-full text-[10px] text-yellow-500 uppercase font-black tracking-widest hover:bg-yellow-500 hover:text-red-950 transition-all">Войти</div>
+                </div>
+            </div>
+            <div class="door-container" onclick="showView('room2')">
+                <div class="door aspect-[2/3.2] rounded-t-[4rem] flex flex-col items-center justify-center p-8 text-center !bg-gradient-to-br from-[#3d2217] to-[#1a0f0a]">
+                    <div class="absolute top-8 w-12 h-12 border-2 border-yellow-600/30 rounded-full flex items-center justify-center opacity-40">II</div>
+                    <i class="fa-solid fa-flask-vial text-6xl mb-8 text-yellow-500 door-icon-glow"></i>
+                    <h3 class="serif text-3xl mb-3 text-white">Зал №2</h3>
+                    <p class="text-[11px] text-yellow-600/80 mb-10 uppercase tracking-[0.2em] font-bold">Школа Рецептов</p>
+                    <div class="px-10 py-3 bg-yellow-600/10 border border-yellow-500/40 rounded-full text-[10px] text-yellow-500 uppercase font-black tracking-widest hover:bg-yellow-500 hover:text-red-950 transition-all">Исследовать</div>
+                </div>
+            </div>
+            <div class="door-container" onclick="showView('room3')">
+                <div class="door aspect-[2/3.2] rounded-t-[4rem] flex flex-col items-center justify-center p-8 text-center !bg-gradient-to-br from-[#4a0404] to-[#200101]">
+                    <div class="absolute top-8 w-12 h-12 border-2 border-yellow-600/30 rounded-full flex items-center justify-center opacity-40">III</div>
+                    <i class="fa-solid fa-shield-cat text-6xl mb-8 text-yellow-500 door-icon-glow"></i>
+                    <h3 class="serif text-3xl mb-3 text-white">Зал №3</h3>
+                    <p class="text-[11px] text-yellow-600/80 mb-10 uppercase tracking-[0.2em] font-bold">Код Грифона</p>
+                    <div class="px-10 py-3 bg-yellow-600/10 border border-yellow-500/40 rounded-full text-[10px] text-yellow-500 uppercase font-black tracking-widest hover:bg-yellow-500 hover:text-red-950 transition-all">Экзамен</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-md mx-auto">
+            <button onclick="showView('gallery')" class="gallery-button w-full py-6 rounded-2xl flex items-center justify-center space-x-4 group">
+                <i class="fa-solid fa-images text-2xl group-hover:rotate-12 transition-transform"></i>
+                <span class="serif text-2xl font-bold uppercase tracking-widest">Как это было</span>
+            </button>
+            <p class="text-stone-500 text-[10px] mt-4 uppercase tracking-[0.3em]">Наш фотоотчёт из глубины веков</p>
+        </div>
+    </section>
+
+    <!-- ЗАЛ 1 -->
+    <section id="view-room1" class="page-transition hidden-page max-w-7xl mx-auto px-4 py-12 w-full">
+        <div class="flex flex-col lg:flex-row gap-12">
+            <div class="lg:w-2/3">
+                <div class="mb-8">
+                    <span class="text-yellow-500 font-bold text-xs uppercase tracking-widest">Хроники открытий</span>
+                    <h2 class="text-5xl font-bold serif gold-text mt-3">Путь Ампулы</h2>
+                </div>
+                <div class="cinema-screen aspect-video relative">
+                    <!-- Замена iframe на video -->
+                    <video controls class="w-full h-full absolute inset-0 z-10 object-cover">
+                        <source src="video1.mp4" type="video/mp4">
+                        Ваш браузер не поддерживает тег video.
+                    </video>
+                </div>
+            </div>
+            <div class="lg:w-1/3">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="serif text-2xl text-yellow-500 italic">Свитки истории</h3>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="prevCard('history')" class="w-10 h-10 rounded-full bg-red-950/50 border border-yellow-900/30 hover:bg-red-900/50 flex items-center justify-center transition"><i class="fa-solid fa-chevron-left text-xs text-yellow-500"></i></button>
+                        <span id="history-counter" class="text-xs font-bold text-yellow-600/50 tracking-widest">01 / 05</span>
+                        <button onclick="nextCard('history')" class="w-10 h-10 rounded-full btn-mystic flex items-center justify-center shadow-md"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                    </div>
+                </div>
+                <!-- Статичные карточки истории (Исправлены img теги, onerror удален) -->
+                <div class="card-stack" id="historyStack">
+                    <div class="story-card active">
+                        <div class="h-40 overflow-hidden rounded-lg mb-4 border border-yellow-900/10">
+                            <img src="1.jpg" class="w-full h-full object-cover grayscale-[0.3]" alt="История 1">
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">Башня и Грифоны</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-[13px] leading-relaxed">Александр Пель был не только ученым, но и хранителем тайн. Горожане верили, что в его кирпичной башне живут грифоны, охраняющие золото алхимика.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest"></div>
+                    </div>
+                    <div class="story-card">
+                        <div class="h-40 overflow-hidden rounded-lg mb-4 border border-yellow-900/10">
+                            <img src="2.png" class="w-full h-full object-cover grayscale-[0.3]" alt="История 2">
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">Грязная Эпоха</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-[13px] leading-relaxed">В XIX веке медицина была опасной. Лекарства в открытых банках быстро портились, в них попадали бактерии и пыль.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest"></div>
+                    </div>
+                    <div class="story-card">
+                        <div class="h-40 overflow-hidden rounded-lg mb-4 border border-yellow-900/10">
+                            <img src="3.png" class="w-full h-full object-cover grayscale-[0.3]" alt="История 3">
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">Решение Пеля</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-[13px] leading-relaxed">В 1885 году Пель придумал запаивать стеклянную трубку огнем. Так родилась первая в мире промышленная ампула — чистая и надежная.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest"></div>
+                    </div>
+                    <div class="story-card">
+                        <div class="h-40 overflow-hidden rounded-lg mb-4 border border-yellow-900/10">
+                            <img src="4.png" class="w-full h-full object-cover grayscale-[0.3]" alt="История 4">
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">Мировая слава</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-[13px] leading-relaxed">Аптека на 7-й линии В.О. стала научным центром империи. Сюда захаживал даже Дмитрий Менделеев.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest"></div>
+                    </div>
+                    <div class="story-card">
+                        <div class="h-40 overflow-hidden rounded-lg mb-4 border border-yellow-900/10">
+                            <img src="5.jpeg" class="w-full h-full object-cover grayscale-[0.3]" alt="История 5">
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">Живая история</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-[13px] leading-relaxed">Сегодня здесь музей, где каждый может почувствовать себя исследователем и узнать, как химия изменила мир.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ЗАЛ 2 -->
+    <section id="view-room2" class="page-transition hidden-page max-w-7xl mx-auto px-4 py-10 w-full">
+        <div class="text-center mb-12">
+            <h2 class="text-5xl font-bold serif gold-text">Школа Домашнего Аптекаря</h2>
+            <p class="text-stone-400 italic mt-2">Тайные формулы красоты и здоровья</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="bg-white/5 rounded-[2rem] p-8 border border-yellow-900/20 backdrop-blur-sm">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="serif text-2xl text-yellow-500"><i class="fa-solid fa-book-open-reader mr-3"></i>Книга Рецептов</h3>
+                    <div class="flex items-center space-x-4">
+                        <span id="recipe-counter" class="text-xs font-bold text-yellow-600/50">01 / 11</span>
+                        <div class="flex space-x-2">
+                            <button onclick="prevCard('recipe')" class="w-9 h-9 rounded bg-red-950/30 border border-yellow-900/30 hover:bg-red-900/50 flex items-center justify-center"><i class="fa-solid fa-chevron-left text-xs text-yellow-600"></i></button>
+                            <button onclick="nextCard('recipe')" class="w-9 h-9 rounded bg-red-950/30 border border-yellow-900/30 hover:bg-red-900/50 flex items-center justify-center"><i class="fa-solid fa-chevron-right text-xs text-yellow-600"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Статичные карточки рецептов -->
+                <div class="card-stack" id="recipeStack">
+                    <div class="story-card active">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-bath text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">1. Бурлящая «Бомбочка» (Классика)</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Секрет:</b> Реакция нейтрализации.<br><br><b>Ингредиенты:</b> сода (4 ст.л.), лимонная кислота (2 ст.л.), соль (1 ст.л.), масло (1 ст.л.).<br><br><b>Инструкция:</b> Смешайте сухие компоненты, добавьте масло до состояния мокрого песка. Утрамбуйте в форму и сушите 12-24 часа.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Химия в ванной</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-spa text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">2. Скраб «Розовый Сад»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Для гладкости кожи.</b><br><br><b>Ингредиенты:</b> Сахар (1 ст.), кокосовое масло (1/2 ст.), лепестки роз, эфирное масло розы.<br><br><b>Инструкция:</b> Смешайте сахар с лепестками, влейте масло, помешивая. Храните в стеклянной баночке.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Ароматерапия Петербурга</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-seedling text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">3. Травяной мешочек для сна</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Средство без химии.</b><br><br><b>Ингредиенты:</b> Лаванда (2 ст.л.), мята (1 ст.л.), шишки хмеля (1 ст.л.), льняной мешочек.<br><br><b>Инструкция:</b> Смешайте травы, наполните мешочек. Положите рядом с подушкой для быстрого засыпания.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Природный покой</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-flask text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">4. Витаминный «Эликсир»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Для иммунитета.</b><br><br><b>Ингредиенты:</b> Имбирь (50г), лимон (1 шт), мед (150г), куркума.<br><br><b>Инструкция:</b> Имбирь натереть, лимон нарезать. Смешать с медом и куркумой. Настаивать 2 дня в холоде.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Сила Доктора Пеля</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-mug-hot text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">5. Кофейный скраб «Энергия»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Тонизирующее средство.</b><br><br><b>Ингредиенты:</b> Молотый кофе (3 ст.л.), соль (1 ст.л.), масло (2 ст.л.).<br><br><b>Инструкция:</b> Смешайте сухие части, добавьте масло до густой кашицы. Использовать в течение недели.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Бодрость утра</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-wand-magic-sparkles text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">6. Бальзам «Медовый щит»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Защита от ветра.</b><br><br><b>Ингредиенты:</b> Пчелиный воск (1 ч.л.), масло ши (1 ч.л.), мед.<br><br><b>Инструкция:</b> Растопите воск и масло на водяной бане, добавьте мед. Быстро перелейте в баночку до застывания.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Защита от холода</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-mountain-sun text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">7. Соль «Эвкалипт»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Для легкого дыхания.</b><br><br><b>Ингредиенты:</b> Соль морская (200г), масло эвкалипта (7 капель).<br><br><b>Инструкция:</b> Насыпьте соль в пакет, добавьте масло. Трясите до равномерного распределения. Используйте в ванне при простуде.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Аптечная профилактика</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-glass-water text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">8. «Мятная вода»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Освежающий тоник.</b><br><br><b>Ингредиенты:</b> Мята (1 пучок), минеральная вода (200мл), сок лимона.<br><br><b>Инструкция:</b> Разотрите мяту, залейте горячей водой (80°C), остудите. Процедите и добавьте лимон.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Натуральная свежесть</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-fire text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">9. Свеча «Аптечный огород»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Аромат трав.</b><br><br><b>Ингредиенты:</b> Воск, фитиль, сушеный чабрец.<br><br><b>Инструкция:</b> Растопите воск, закрепите фитиль в стакане. Положите травы на дно и залейте воском. Посыпьте сверху декором.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Уют XIX века</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-mask text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">10. Овсяная «Маска красоты»</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Старинный рецепт.</b><br><br><b>Ингредиенты:</b> Овсянка (2 ст.л.), теплое молоко (2 ст.л.), мед.<br><br><b>Инструкция:</b> Залейте хлопья молоком на 5 мин, добавьте мед. Нанесите на лицо на 10 мин. Кожа станет очень мягкой.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Секрет прабабушек</div>
+                    </div>
+
+                    <div class="story-card">
+                        <div class="h-32 flex items-center justify-center mb-2 text-yellow-600/30">
+                            <i class="fa-solid fa-triangle-exclamation text-6xl"></i>
+                        </div>
+                        <h3 class="serif text-lg font-bold mb-2 text-red-950">⚠️ Правила безопасности</h3>
+                        <div class="scroll-custom overflow-y-auto pr-2 flex-grow">
+                            <p class="text-stone-700 text-base leading-7"><b>Важно знать!</b><br><br>1. <b>Аллергия:</b> Проверьте средство на сгибе локтя (20 мин).<br>2. <b>Огонь:</b> Нагревание только со взрослыми!<br>3. <b>Хранение:</b> В холодильнике не более 1-2 недель.</p>
+                        </div>
+                        <div class="mt-4 pt-2 border-t border-yellow-900/10 text-[9px] italic text-yellow-700 font-bold uppercase tracking-widest">Важная информация</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-b from-[#200101] to-[#100000] rounded-[2.5rem] p-10 shadow-2xl border-2 border-yellow-900/30 relative flex flex-col items-center">
+                <h3 class="serif text-3xl gold-text mb-8">Лабораторный Котел</h3>
+                <div id="cauldron-area" class="relative w-64 h-64 mb-10 flex items-center justify-center bg-red-950/20 rounded-full border-4 border-yellow-900/40 shadow-[inset_0_0_50px_rgba(0,0,0,0.8)]">
+                    <i class="fa-solid fa-bowl-food text-[10rem] text-yellow-600 transition-all duration-700 z-10 opacity-80" id="cauldron-icon"></i>
+                    <div id="bubble-zone" class="absolute inset-0 overflow-hidden rounded-full"></div>
+                </div>
+                <div class="w-full bg-black/40 p-6 rounded-2xl border border-yellow-900/20 mb-8">
+                    <div id="mix-status" class="text-sm italic text-center text-yellow-600/80 mb-6 h-6 uppercase tracking-widest">Выберите ингредиент...</div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <button onclick="mix('Сода')" class="bg-red-950/40 border border-yellow-900/20 hover:bg-red-900/60 p-3 rounded-xl text-[10px] text-yellow-500 font-bold transition uppercase tracking-tighter">Сода</button>
+                        <button onclick="mix('Масло')" class="bg-red-950/40 border border-yellow-900/20 hover:bg-red-900/60 p-3 rounded-xl text-[10px] text-yellow-500 font-bold transition uppercase tracking-tighter">Масло</button>
+                        <button onclick="mix('Кислота')" class="bg-red-950/40 border border-yellow-900/20 hover:bg-red-900/60 p-3 rounded-xl text-[10px] text-yellow-500 font-bold transition uppercase tracking-tighter">Кислота</button>
+                        <button onclick="mix('Травы')" class="bg-red-950/40 border border-yellow-900/20 hover:bg-red-900/60 p-3 rounded-xl text-[10px] text-yellow-500 font-bold transition uppercase tracking-tighter">Травы</button>
+                        <button onclick="mix('Сахар')" class="bg-red-950/40 border border-yellow-900/20 hover:bg-red-900/60 p-3 rounded-xl text-[10px] text-yellow-500 font-bold transition uppercase tracking-tighter">Сахар</button>
+                        <button onclick="mix('Мед')" class="bg-red-950/40 border border-yellow-900/20 hover:bg-red-900/60 p-3 rounded-xl text-[10px] text-yellow-500 font-bold transition uppercase tracking-tighter">Мед</button>
+                    </div>
+                </div>
+                <button id="reaction-btn" disabled onclick="runReaction()" class="w-full py-5 btn-mystic rounded-xl opacity-20 cursor-not-allowed uppercase tracking-[0.2em] text-sm">Начать трансмутацию...</button>
+            </div>
+        </div>
+
+        <div class="mt-16 border-t border-yellow-900/20 pt-16">
+            <div class="flex flex-col lg:flex-row gap-12 items-center">
+                <div class="lg:w-7/12 w-full">
+                    <div class="cinema-screen aspect-video relative flex items-center justify-center bg-[#0a0505] overflow-hidden">
+                        <!-- Замена iframe на video -->
+                        <video controls class="w-full h-full object-cover">
+                            <source src="video2.mp4" type="video/mp4">
+                            Ваш браузер не поддерживает тег video.
+                        </video>
+                    </div>
+                </div>
+                <div class="lg:w-5/12 w-full">
+                    <div class="relative p-10 bg-gradient-to-br from-red-950/10 to-transparent border-l-4 border-yellow-600/40">
+                        <i class="fa-solid fa-quote-right absolute top-6 right-6 text-6xl text-yellow-900/10"></i>
+                        <h3 class="serif text-3xl text-yellow-500 mb-6">Живая История</h3>
+                        <p class="text-xl text-stone-300 italic leading-relaxed font-serif">
+                            «Как мы воплощали рецепты нашей домашней аптеки»
+                        </p>
+                        <div class="mt-8 flex items-center space-x-4">
+                            <div class="h-px flex-grow bg-yellow-900/30"></div>
+                            <span class="text-[10px] uppercase tracking-[0.2em] text-yellow-600 font-bold">Видеодневник</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ЗАЛ 3 -->
+    <section id="view-room3" class="page-transition hidden-page max-w-4xl mx-auto px-4 py-12 w-full">
+        <div id="quiz-card" class="bg-[#1a0f0a] rounded-[2.5rem] shadow-2xl border-2 border-yellow-900/40 overflow-hidden relative">
+            <div id="quiz-bar" class="h-1.5 bg-yellow-600 transition-all duration-700 shadow-[0_0_15px_rgba(212,175,55,0.6)]" style="width: 0%"></div>
+            <div class="p-10 md:p-20">
+                <div id="quiz-content">
+                    <div class="mb-12">
+                        <span id="q-label" class="text-yellow-500/60 font-bold text-xs uppercase tracking-[0.3em]">Испытание Разума</span>
+                        <h2 id="q-text" class="text-3xl md:text-4xl font-bold serif mt-6 text-white leading-tight">...</h2>
+                        <p id="q-feedback" class="mt-6 text-sm italic p-4 bg-black/30 border-l-4 border-yellow-600 text-yellow-200/80 hidden"></p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="q-options"></div>
+                    <button id="next-btn" class="hidden mt-10 w-full py-5 btn-mystic rounded-xl uppercase tracking-widest" onclick="nextQuestion()">К следующему свитку <i class="fa-solid fa-feather-pointed ml-3"></i></button>
+                </div>
+                <div id="quiz-results" class="hidden text-center py-8">
+                    <div class="w-28 h-28 bg-red-950/50 border-2 border-yellow-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_30_rgba(212,175,55,0.2)]">
+                        <i class="fa-solid fa-certificate text-5xl text-yellow-500"></i>
+                    </div>
+                    <h2 class="text-5xl font-bold serif mb-6 gold-text">Экзамен завершен!</h2>
+                    <p class="text-2xl text-stone-400 mb-2">Правильных ответов: <span id="final-score-val" class="font-bold text-yellow-500">0</span> из 10</p>
+                    <p class="text-lg text-stone-500 mb-12 italic">Ваш алхимический статус: <span id="rank-name" class="font-bold text-yellow-500 uppercase not-italic tracking-widest">...</span></p>
+                    <button onclick="resetQuiz()" class="btn-mystic px-12 py-5 rounded-full uppercase text-xs tracking-widest">Пройти заново</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ГАЛЕРЕЯ -->
+    <section id="view-gallery" class="page-transition hidden-page max-w-7xl mx-auto px-4 py-12 w-full">
+        <div class="text-center mb-12">
+            <h2 class="text-5xl font-bold serif gold-text">Наша Фотогалерея</h2>
+            <p class="text-stone-400 italic mt-4">Мгновения, запечатленные в стенах старой аптеки</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- 14 фотографий, исправлены img теги, onerror удален -->
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="6.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="6.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="7.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="7.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="8.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="8.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="9.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="9.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="10.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="10.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="11.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="11.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="12.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="12.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="13.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="13.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="14.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="14.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="15.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="15.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="16.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="16.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="17.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="17.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="18.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="18.jpg">
+            </div>
+            <div class="aspect-square bg-white/5 border border-yellow-900/20 rounded-xl overflow-hidden group relative">
+                <img src="19.jpg" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 grayscale group-hover:grayscale-0" alt="19.jpg">
+            </div>
+        </div>
+        <div class="mt-16 text-center">
+            <button onclick="showView('lobby')" class="px-10 py-4 bg-red-950/30 border border-yellow-900/50 rounded-full text-yellow-500 text-xs uppercase font-bold tracking-[0.3em] hover:bg-red-950/60 hover:border-yellow-500 transition-all">
+                <i class="fa-solid fa-arrow-left mr-3"></i> Вернуться в холл
+            </button>
+        </div>
+    </section>
+
+    <script>
+        const masterQuizData = [
+            { q: "Что Александр Пель начал производить первым в мире промышленным способом?", a: ["Стеклянные ампулы", "Таблетки в оболочке", "Медицинские маски", "Пластыри"], c: 0, r: "В 1885 году Пель внедрил метод герметичной запайки лекарств в ампулы." },
+            { q: "Как называли мистических существ, которые якобы охраняли башню во дворе аптеки?", a: ["Грифоны", "Драконы", "Гаргульи", "Сфинксы"], c: 0, r: "Легенда гласит, что Пель вывел невидимых грифонов для охраны своих секретов." },
+            { q: "Где именно на Васильевском острове находится знаменитая аптека?", a: ["На 7-й линии", "На Большом проспекте", "На Университетской набережной", "На 1-й линии"], c: 0, r: "Аптека Доктора Пеля расположена по адресу: 7-я линия В.О., дом 16-18." },
+            { q: "Какого цвета была аптечная посуда для хранения светочувствительных веществ?", a: ["Оранжевая или синяя", "Прозрачная", "Ярко-зеленая", "Черная"], c: 0, r: "Темное стекло защищало химические составы от воздействия солнечных лучей." },
+            { q: "Кто из знаменитых химиков был близким другом Александра Пеля?", a: ["Д. И. Менделеев", "А. М. Бутлеров", "М. В. Ломоносов", "Н. Н. Зинин"], c: 0, r: "Менделеев часто заходил в аптеку и обсуждал с Пелем научные открытия." },
+            { q: "Что такое 'Галеновы препараты'?", a: ["Вытяжки из растительного сырья", "Минеральные соли", "Синтетические яды", "Мази на основе дегтя"], c: 0, r: "Это лекарственные средства, получаемые путем экстракции из растений." },
+            { q: "Какое звание носил Александр Пель?", a: ["Поставщик Двора Его Императорского Величества", "Главный Лекарь Армии", "Министр Здравоохранения", "Почетный гражданин мира"], c: 0, r: "Это было высшим признанием качества продукции аптеки в Российской империи." },
+            { q: "Для чего использовались ступка и пестик?", a: ["Для измельчения веществ", "Для хранения жидкостей", "Для нагрева смесей", "Для измерения объема"], c: 0, r: "Это базовый инструмент фармацевта для получения однородных порошков." },
+            { q: "Что находилось в подвале Аптеки Пеля?", a: ["Химическая лаборатория", "Склад мебели", "Библиотека", "Комната отдыха"], c: 0, r: "В подвале располагалась одна из самых современных лабораторий того времени." },
+            { q: "Какое вещество Пель первым выделил и начал применять в органотерапии?", a: ["Спермин", "Инсулин", "Адреналин", "Пенициллин"], c: 0, r: "Препарат 'Спермин-Пель' принес ученому мировую славу в конце XIX века." },
+            { q: "Как назывался прибор для перегонки жидкостей в аптеке?", a: ["Реторта", "Мензурка", "Пипетка", "Шпатель"], c: 0, r: "Реторта — классический алхимический и химический сосуд для дистилляции." },
+            { q: "Что Пель делал со стеклянной трубкой, чтобы превратить её в ампулу?", a: ["Запаивал огнем", "Закрывал пробкой", "Склеивал смолой", "Замораживал"], c: 0, r: "Именно герметичная запайка под пламенем обеспечивала стерильность." },
+            { q: "Зачем на кирпичах 'Башни Грифонов' были написаны цифры?", a: ["По легенде, это код Вселенной", "Это были номера партий кирпича", "Для инвентаризации", "Это ценники аптеки"], c: 0, r: "Мистики верят, что Пель зашифровал там формулу бессмертия." },
+            { q: "Какое образование было обязательным для владельца такой аптеки?", a: ["Провизор", "Инженер", "Биолог", "Философ"], c: 0, r: "Провизор — специалист с высшим фармацевтическим образованием." },
+            { q: "Почему открытие ампул спасло миллионы жизней?", a: ["Обеспечило стерильность инъекций", "Лекарства стали дешевле", "Ампулы удобнее носить в кармане", "Они красивые"], c: 0, r: "Герметичность предотвращала попадание бактерий в лекарство перед уколом." }
+        ];
+
+        let state = {
+            historyIdx: 0,
+            recipeIdx: 0,
+            mixItems: [],
+            quizIdx: 0,
+            score: 0,
+            currentQuestions: []
+        };
+
+        function showView(id) {
+            document.querySelectorAll('.page-transition').forEach(v => {
+                v.classList.add('hidden-page');
+                v.style.opacity = '0';
+            });
+            const active = document.getElementById(`view-${id}`);
+            active.classList.remove('hidden-page');
+            setTimeout(() => active.style.opacity = '1', 50);
+
+            // Если это комната 3, сбрасываем викторину
+            if(id === 'room3') resetQuiz();
+            
+            const info = document.getElementById('nav-info');
+            const map = { lobby: 'Secretum Secretorum', room1: 'Viae Ampullae', room2: 'Magisterii Receptorum', room3: 'Examen Alchemistae', gallery: 'Memoria Photographica' };
+            info.textContent = map[id] || 'Pharmacia Pell';
+        }
+
+        function updateCounters(key) {
+            const el = document.getElementById(`${key}-counter`);
+            const total = key === 'history' ? 5 : 11; // 11 карточек в рецептах
+            if(el) el.textContent = `${(state[key+'Idx']+1).toString().padStart(2,'0')} / ${total.toString().padStart(2,'0')}`;
+        }
+
+        function nextCard(key) {
+            const max = key === 'history' ? 4 : 10;
+            if(state[key+'Idx'] < max) {
+                state[key+'Idx']++;
+                refreshStack(key);
+            }
+        }
+
+        function prevCard(key) {
+            if(state[key+'Idx'] > 0) {
+                state[key+'Idx']--;
+                refreshStack(key);
+            }
+        }
+
+        function refreshStack(key) {
+            const stackId = key === 'history' ? 'historyStack' : 'recipeStack';
+            const cards = document.getElementById(stackId).children;
+            for(let i=0; i<cards.length; i++) {
+                cards[i].classList.remove('active', 'prev');
+                if(i === state[key+'Idx']) cards[i].classList.add('active');
+                else if(i < state[key+'Idx']) cards[i].classList.add('prev');
+            }
+            updateCounters(key);
+        }
+
+        function mix(item) {
+            if(!state.mixItems.includes(item)) {
+                state.mixItems.push(item);
+                const status = document.getElementById('mix-status');
+                status.innerHTML = `<span class="text-white">Состав:</span> ${state.mixItems.join(' + ')}`;
+                if(state.mixItems.length >= 3) {
+                    const btn = document.getElementById('reaction-btn');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-20', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function runReaction() {
+            const cauldron = document.getElementById('cauldron-icon');
+            const zone = document.getElementById('bubble-zone');
+            cauldron.classList.add('animate-pulse', 'text-yellow-400');
+            for(let i=0; i<15; i++) {
+                setTimeout(() => {
+                    const b = document.createElement('div');
+                    b.className = 'bubble';
+                    const s = Math.random() * 30 + 10 + 'px';
+                    b.style.width = s; b.style.height = s;
+                    b.style.left = Math.random() * 80 + 10 + '%';
+                    b.style.bottom = '15%';
+                    zone.appendChild(b);
+                    setTimeout(() => b.remove(), 2500);
+                }, i * 180);
+            }
+            document.getElementById('mix-status').innerHTML = "<span class='text-yellow-400 font-bold tracking-widest'>ТРАНСМУТАЦИЯ...</span>";
+            setTimeout(() => {
+                cauldron.classList.remove('animate-pulse', 'text-yellow-400');
+                state.mixItems = [];
+                const btn = document.getElementById('reaction-btn');
+                btn.disabled = true;
+                btn.classList.add('opacity-20', 'cursor-not-allowed');
+                document.getElementById('mix-status').textContent = "Выберите ингредиент...";
+            }, 3500);
+        }
+
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function resetQuiz() {
+            state.quizIdx = 0; 
+            state.score = 0;
+            state.currentQuestions = shuffle([...masterQuizData]).slice(0, 10);
+            document.getElementById('quiz-content').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const qData = state.currentQuestions[state.quizIdx];
+            document.getElementById('q-text').textContent = qData.q;
+            document.getElementById('q-label').textContent = `Свиток ${state.quizIdx+1} / 10`;
+            document.getElementById('quiz-bar').style.width = `${(state.quizIdx/10)*100}%`;
+            document.getElementById('q-feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const optsContainer = document.getElementById('q-options');
+            optsContainer.innerHTML = '';
+            
+            const options = qData.a.map((text, index) => ({ text, isCorrect: index === qData.c }));
+            shuffle(options).forEach(opt => {
+                const b = document.createElement('button');
+                b.className = "p-5 border-2 border-yellow-900/20 bg-black/20 rounded-xl text-left hover:border-yellow-500/50 transition-all text-yellow-100/80";
+                b.textContent = opt.text;
+                b.onclick = () => {
+                    if(document.getElementById('next-btn').classList.contains('hidden')) {
+                        const feedback = document.getElementById('q-feedback');
+                        feedback.classList.remove('hidden');
+                        feedback.textContent = qData.r;
+                        if(opt.isCorrect) {
+                            state.score++;
+                            b.classList.add('!border-yellow-600', '!bg-yellow-600/20');
+                        } else {
+                            b.classList.add('!border-red-900', '!bg-red-900/20');
+                        }
+                        document.getElementById('next-btn').classList.remove('hidden');
+                        Array.from(optsContainer.children).forEach(btn => btn.disabled = true);
+                    }
+                };
+                optsContainer.appendChild(b);
+            });
+        }
+
+        function nextQuestion() {
+            state.quizIdx++;
+            if(state.quizIdx < 10) renderQuestion();
+            else {
+                document.getElementById('quiz-content').classList.add('hidden');
+                document.getElementById('quiz-results').classList.remove('hidden');
+                document.getElementById('final-score-val').textContent = state.score;
+                const ranks = ["Новичок", "Адепт Фармации", "Магистр Алхимии"];
+                document.getElementById('rank-name').textContent = state.score >= 9 ? ranks[2] : (state.score >= 6 ? ranks[1] : ranks[0]);
+            }
+        }
+
+        window.onload = () => showView('lobby');
+    </script>
+</body>
+</html>
